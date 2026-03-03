@@ -512,15 +512,6 @@
             //    "AutoModMessageHeld",
             //]);
 
-            const twitchEventWhitelist = new Set([
-                "Sub",
-                "ReSub",
-                "Raid",
-                "Cheer",
-                "GiftSub",
-                "GiftBomb"
-            ]);
-
             const youtubeEventWhitelist = new Set([
                 "MembershipGift",
                 "SuperChat",
@@ -537,19 +528,19 @@
                     // You are free to remove durationMonths if it's actually shows 3+ months subs
                     case "Sub":
                         name = data.user.name;
-                        type = data.is_prime ? "PrimeSub" : `Tier ${data.sub_tier} ${type} for ${data.durationMonths}`;
+                        type = data.is_prime ? "PrimeSub" : `Tier ${data.sub_tier} ${type} for ${data.durationMonths} months`;
                         break;
                     
                     case "ReSub":
                         name = data.user.name;
-                        type = data.is_prime ? "PrimeReSub" : `Tier ${data.subTier} ${type} for ${data.durationMonths}`;
-                        value = `/ Total: ${data.cumulativeMonths}m`; 
+                        type = data.is_prime ? "PrimeReSub" : `Tier ${data.subTier} ${type} for ${data.durationMonths} months`;
+                        value = `/ Total: ${data.cumulativeMonths} months`; 
                         break;
 
                     case "GiftBomb":
                         name = data.user.name;
                         type = data.total > 1 ? type : "RandomSub";
-                        value = data.total > 1 ? `${data.total}xTier${data.sub_tier}` : `${data.recipients[0]} Tier${data.sub_tier}`
+                        value = data.total > 1 ? `${data.total}x Tier ${data.sub_tier}` : `${data.recipients[0]} Tier ${data.sub_tier}`
                         break;
 
                     case "GiftSub":
