@@ -289,7 +289,7 @@
             const MAX_STORED_EVENTS = 10;
 
             function renderEventPill(
-                { source, type, name },
+                { source, type, name, value },
                 shouldAnimate = true,
             ) {
                 const pill = document.createElement("div");
@@ -305,8 +305,15 @@
                 const typeSpan = document.createElement("span");
                 typeSpan.className = "ep-type";
                 typeSpan.textContent = type;
-
                 pill.appendChild(typeSpan);
+
+                if (value) {
+                    const valueSpan = document.createElement("span");
+                    valueSpan.className = "ep-value";
+                    valueSpan.textContent = value;
+                    pill.appendChild(valueSpan);
+                }
+
                 eventsTrack.appendChild(pill);
 
                 if (!shouldAnimate) {
@@ -351,8 +358,8 @@
                 eventsTrack.style.animationDuration = dur + "s";
             }
 
-            function addEventPill(source, type, name) {
-                const item = { source, type, name };
+            function addEventPill(source, type, name, value) {
+                const item = {source, type, name, value };
                 renderEventPill(item);
                 saveEventHistory(item);
                 updateTickerDuration();
@@ -508,7 +515,6 @@
             const twitchEventWhitelist = new Set([
                 "Sub",
                 "ReSub",
-                "GiftedSub",
                 "Raid",
                 "Cheer",
                 "GiftSub",
@@ -522,17 +528,52 @@
             ]);
 
             function handleTwitchEvent(e) {
+                let name, value;
+                let validEvent = true;
                 const { data, event } = e;
                 if (!event) return;
-                const type = event.type;
-                if (!twitchEventWhitelist.has(type)) return;
-                const name =
-                    data?.user?.name ||
-                    data?.message?.displayName ||
-                    data?.recipientUser?.name ||
-                    data?.gifter?.name ||
-                    "";
-                addEventPill("Twitch", type, name);
+                let type = event.type;
+                switch (event.type) {
+                    // You are free to remove durationMonths if it's actually shows 3+ months subs
+                    case "Sub":
+                        name = data.user.name;
+                        type = data.is_prime ? "PrimeSub" : `Tier ${data.sub_tier} ${type} for ${data.durationMonths}`;
+                        break;
+                    
+                    case "ReSub":
+                        name = data.user.name;
+                        type = data.is_prime ? "PrimeReSub" : `Tier ${data.sub_tier} ${type} for ${data.durationMonths}`;
+                        value = `${data.cumulativeMonths}m`; 
+                        break;
+
+                    case "GiftBomb":
+                        name = data.user.name;
+                        type = data.total > 1 ? type : "RandomSub";
+                        value = data.total > 1 ? `${data.total}xTier${data.sub_tier}` : `${data.recipients[0]} Tier${data.sub_tier}`
+                        break;
+
+                    case "GiftSub":
+                        if (!data.randomCommunitySubGift){
+                        name = data.user.name;
+                        value = `Tier ${data.subTier} of ${data.durationMonths} to ${data.recepient}`
+                       }
+                       break;
+                    
+                    case "Raid":
+                       // There is no data for that yet, so it will just be raid from guy
+                       name = data.user.name;
+                       break;
+
+                    case "Cheer":
+                        name = data.anonymous ? "Anonymous" : data.user.name;
+                        value = data.bits;
+                        break;                    
+                    
+                    default:
+                        validEvent = false;
+                        break;
+                }
+                if (validEvent) addEventPill("Twitch", type, name, value);
             }
 
             function handleYouTubeEvent(e) {
@@ -541,7 +582,7 @@
                 const type = event.type;
                 if (!youtubeEventWhitelist.has(type)) return;
                 const name = data?.user?.name || data?.sponsor?.name || "";
-                addEventPill("YouTube", type, name);
+                addEventPill("YouTube", type, name, "");
             }
 
             client.on("Twitch.*", handleTwitchEvent);
