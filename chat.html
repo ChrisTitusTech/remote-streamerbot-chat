@@ -491,25 +491,41 @@
 
             // ── Events ticker ────────────────────────────────────────────────────────────
 
-            const EXCLUDED_EVENTS = new Set([
-                "ChatMessage",
-                "Message",
-                "StatisticsUpdated",
-                "ViewerCountUpdate",
-                "GoalProgress",
-                "FirstWords",
-                "FirstWord",
-                "Follow",
-                "WatchStreak",
-                "UserBanned",
-                "AutoModMessageHeld",
+            //const EXCLUDED_EVENTS = new Set([
+            //    "ChatMessage",
+            //    "Message",
+            //    "StatisticsUpdated",
+            //    "ViewerCountUpdate",
+            //    "GoalProgress",
+            //    "FirstWords",
+            //    "FirstWord",
+            //    "Follow",
+            //    "WatchStreak",
+            //    "UserBanned",
+            //    "AutoModMessageHeld",
+            //]);
+
+            const twitchEventWhitelist = new Set([
+                "Sub",
+                "ReSub",
+                "GiftedSub",
+                "Raid",
+                "Cheer",
+                "GiftSub",
+                "GiftBomb"
+            ]);
+
+            const youtubeEventWhitelist = new Set([
+                "MembershipGift",
+                "SuperChat",
+                "SuperSticker"
             ]);
 
             function handleTwitchEvent(e) {
                 const { data, event } = e;
                 if (!event) return;
                 const type = event.type;
-                if (EXCLUDED_EVENTS.has(type)) return;
+                if (!twitchEventWhitelist.has(type)) return;
                 const name =
                     data?.user?.name ||
                     data?.message?.displayName ||
@@ -523,7 +539,7 @@
                 const { data, event } = e;
                 if (!event) return;
                 const type = event.type;
-                if (EXCLUDED_EVENTS.has(type)) return;
+                if (!youtubeEventWhitelist.has(type)) return;
                 const name = data?.user?.name || data?.sponsor?.name || "";
                 addEventPill("YouTube", type, name);
             }
