@@ -534,6 +534,7 @@
                     badges = data.message?.badges || data.user?.badges || [];
                     mention = messageText.toLowerCase().includes("christitustech") != -1;
                     messageId = data.messageId
+                    reply = data.reply
                 }
 
                 const container =
@@ -546,7 +547,8 @@
                     badges,
                     emotes,
                     mention,
-                    messageId
+                    messageId,
+                    reply
                 );
             }
 
