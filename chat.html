@@ -582,17 +582,17 @@
                         value = `/ Total: ${data.cumulativeMonths} months`; 
                         break;
 
-                    case "GiftBomb":
-                        name = data.user.name;
-                        type = data.total > 1 ? type : "RandomSub";
-                        value = data.total > 1 ? `${data.total}x Tier ${data.sub_tier.substring(0,1)}` : `${data.recipients[0]} Tier ${data.sub_tier.substring(0,1)}`
-                        break;
+                    // This thing is dependent on your Streamer.bot settings, I'll levae it in case you'll configure it
+                    // case "GiftBomb":
+                    //     name = data.user.name;
+                    //     type = data.total > 1 ? type : "RandomSub";
+                    //     value = data.total > 1 ? `${data.total}x Tier ${data.sub_tier.substring(0,1)}` : `${data.recipients[0]} Tier ${data.sub_tier.substring(0,1)}`
+                    //     break;
 
                     case "GiftSub":
-                        if (!data.randomCommunitySubGift){
                         name = data.user.name;
+                        type = data.randomCommunitySubGift ? "RandomSub" : "GiftSub";
                         value = `${data.durationMonths} months of Tier ${data.subTier.substring(0,1)} to ${data.recepient.name}`
-                       }
                        break;
                     
                     case "Raid":
