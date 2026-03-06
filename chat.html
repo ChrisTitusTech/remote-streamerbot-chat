@@ -1,628 +1,640 @@
 <!doctype html>
 <html>
-    <head>
-        <meta charset="UTF-8" />
-        <title>StreamerBot Chat</title>
+  <head>
+    <meta charset="UTF-8" />
+    <title>StreamerBot Chat</title>
 
-        <script src="streamerbot-client.js"></script>
+    <script src="streamerbot-client.js"></script>
 
-        <style>
-            :root {
-                --bg: #0f1117;
-                --panel: #161a22;
-                --border: #262b36;
-                --text: #e6e6e6;
-                --muted: #9aa4b2;
-                --accent: #5aa9ff;
-                --good: #4caf50;
-                --warn: #ff9800;
-                --bad: #f44336;
-                --twitch: #9147ff;
-                --youtube: #ff0000;
-            }
+    <style>
+      :root {
+        --bg: #0f1117;
+        --panel: #161a22;
+        --border: #262b36;
+        --text: #e6e6e6;
+        --muted: #9aa4b2;
+        --accent: #5aa9ff;
+        --good: #4caf50;
+        --warn: #ff9800;
+        --bad: #f44336;
+        --twitch: #9147ff;
+        --youtube: #ff0000;
+      }
 
-            * {
-                box-sizing: border-box;
-            }
+      * {
+        box-sizing: border-box;
+      }
 
-            body {
-                margin: 0;
-                background: var(--bg);
-                font-family:
-                    system-ui,
-                    -apple-system,
-                    Segoe UI,
-                    Roboto,
-                    sans-serif;
-                color: var(--text);
-                display: flex;
-                flex-direction: column;
-                height: 100vh;
-            }
+      body {
+        margin: 0;
+        background: var(--bg);
+        font-family:
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          sans-serif;
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
 
-            header {
-                padding: 12px 16px;
-                background: var(--panel);
-                border-bottom: 1px solid var(--border);
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                font-weight: 600;
-                font-size: 14px;
-                flex-shrink: 0;
-            }
+      header {
+        padding: 12px 16px;
+        background: var(--panel);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 600;
+        font-size: 14px;
+        flex-shrink: 0;
+      }
 
-            #status {
-                font-size: 12px;
-                padding: 4px 10px;
-                border-radius: 20px;
-            }
+      #status {
+        font-size: 12px;
+        padding: 4px 10px;
+        border-radius: 20px;
+      }
 
-            .status-connected {
-                background: var(--good);
-            }
-            .status-connecting {
-                background: var(--warn);
-            }
-            .status-disconnected {
-                background: var(--bad);
-            }
+      .status-connected {
+        background: var(--good);
+      }
+      .status-connecting {
+        background: var(--warn);
+      }
+      .status-disconnected {
+        background: var(--bad);
+      }
 
-            #events-bar {
-                background: var(--panel);
-                border-bottom: 2px solid var(--border);
-                overflow: hidden;
-                flex-shrink: 0;
-                position: relative;
-                height: 32px;
-                display: flex;
-                align-items: center;
-            }
+      #events-bar {
+        background: var(--panel);
+        border-bottom: 2px solid var(--border);
+        overflow: hidden;
+        flex-shrink: 0;
+        position: relative;
+        height: 32px;
+        display: flex;
+        align-items: center;
+      }
 
-            #events-track {
-                display: flex;
-                align-items: center;
-                gap: 24px;
-                white-space: nowrap;
-                animation: ticker linear infinite;
-                animation-duration: 30s;
-                padding-left: 100%;
-            }
+      #events-track {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        white-space: nowrap;
+        animation: ticker linear infinite;
+        animation-duration: 30s;
+        padding-left: 100%;
+      }
 
-            #events-track:empty {
-                animation: none;
-            }
+      #events-track:empty {
+        animation: none;
+      }
 
-            #events-bar:hover #events-track {
-                animation-play-state: paused;
-            }
+      #events-bar:hover #events-track {
+        animation-play-state: paused;
+      }
 
-            @keyframes ticker {
-                0% {
-                    transform: translateX(0);
-                }
-                100% {
-                    transform: translateX(-100%);
-                }
-            }
+      @keyframes ticker {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(-100%);
+        }
+      }
 
-            .event-pill {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                font-size: 12px;
-                padding: 2px 10px;
-                border-radius: 20px;
-                background: var(--border);
-                flex-shrink: 0;
-            }
+      .event-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        padding: 2px 10px;
+        border-radius: 20px;
+        background: var(--border);
+        flex-shrink: 0;
+      }
 
-            .event-pill.twitch {
-                border-left: 3px solid var(--twitch);
-            }
-            .event-pill.youtube {
-                border-left: 3px solid var(--youtube);
-            }
+      .event-pill.twitch {
+        border-left: 3px solid var(--twitch);
+      }
+      .event-pill.youtube {
+        border-left: 3px solid var(--youtube);
+      }
 
-            .event-pill .ep-name {
-                font-weight: 600;
-            }
+      .event-pill .ep-name {
+        font-weight: 600;
+      }
 
-            .event-pill .ep-data {
-                color: var(--muted);
-                font-size: 11px;
-            }
+      .event-pill .ep-data {
+        color: var(--muted);
+        font-size: 11px;
+      }
 
-            #columns {
-                flex: 1;
-                display: flex;
-                overflow: hidden;
-            }
+      #columns {
+        flex: 1;
+        display: flex;
+        overflow: hidden;
+      }
 
-            .column {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-                overflow: hidden;
-            }
+      .column {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
 
-            .column:first-child {
-                border-right: 2px solid var(--border);
-            }
+      .column:first-child {
+        border-right: 2px solid var(--border);
+      }
 
-            .column-header {
-                padding: 10px 16px;
-                background: var(--panel);
-                border-bottom: 1px solid var(--border);
-                font-weight: 700;
-                font-size: 13px;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                flex-shrink: 0;
-            }
+      .column-header {
+        padding: 10px 16px;
+        background: var(--panel);
+        border-bottom: 1px solid var(--border);
+        font-weight: 700;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+      }
 
-            .column-header.twitch {
-                color: var(--twitch);
-            }
+      .column-header.twitch {
+        color: var(--twitch);
+      }
 
-            .column-header.youtube {
-                color: var(--youtube);
-            }
+      .column-header.youtube {
+        color: var(--youtube);
+      }
 
-            .chat {
-                flex: 1;
-                overflow-y: auto;
-                padding: 12px;
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
-            }
+      .chat {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
 
-            .message {
-                background: var(--panel);
-                padding: 8px 12px;
-                border-radius: 12px;
-                border: 1px solid var(--border);
-                animation: fadeIn 0.15s ease-out;
-            }
+      .message {
+        background: var(--panel);
+        padding: 8px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        animation: fadeIn 0.15s ease-out;
+      }
 
-            .message.mention {
-                border-left: 4px solid var(--warn)
-            }
+      .message.mention {
+        border-left: 4px solid var(--warn);
+      }
 
-            .meta {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                flex-wrap: wrap;
-            }
+      .meta {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
 
-            .user {
-                font-weight: 600;
-            }
+      .user {
+        font-weight: 600;
+      }
 
-            .time {
-                font-size: 11px;
-                color: var(--muted);
-                margin-left: auto;
-            }
+      .time {
+        font-size: 11px;
+        color: var(--muted);
+        margin-left: auto;
+      }
 
-            .text {
-                word-wrap: break-word;
-                white-space: pre-wrap;
-            }
+      .text {
+        word-wrap: break-word;
+        white-space: pre-wrap;
+      }
 
-            .reply {
-                font-size: 11px;
-                color: var(--muted);
-                border-left: 2px solid var(--border);
-                padding-left: 6px;
-                word-break: break-word;
-            }
+      .reply {
+        font-size: 11px;
+        color: var(--muted);
+        border-left: 2px solid var(--border);
+        padding-left: 6px;
+        word-break: break-word;
+      }
 
-            .badge {
-                height: 16px;
-                vertical-align: middle;
-            }
+      .badge {
+        height: 16px;
+        vertical-align: middle;
+      }
 
-            .platform-icon {
-                height: 14px;
-                width: 14px;
-                vertical-align: middle;
-                flex-shrink: 0;
-            }
+      .platform-icon {
+        height: 14px;
+        width: 14px;
+        vertical-align: middle;
+        flex-shrink: 0;
+      }
 
-            @keyframes fadeIn {
-                from {
-                    opacity: 0;
-                    transform: translateY(4px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-        </style>
-    </head>
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
 
-    <body>
-        <header>
-            Live Chat
-            <div id="status" class="status-connecting">Connecting…</div>
-        </header>
+  <body>
+    <header>
+      Live Chat
+      <div id="status" class="status-connecting">Connecting…</div>
+    </header>
 
-        <div id="events-bar">
-            <div id="events-track"></div>
+    <div id="events-bar">
+      <div id="events-track"></div>
+    </div>
+
+    <div id="columns">
+      <div class="column">
+        <div class="column-header twitch">
+          <svg
+            class="platform-icon"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fill="#9147ff"
+              d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"
+            />
+          </svg>
+          Twitch
         </div>
-
-        <div id="columns">
-            <div class="column">
-                <div class="column-header twitch">
-                    <svg
-                        class="platform-icon"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                    >
-                        <path
-                            fill="#9147ff"
-                            d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"
-                        />
-                    </svg>
-                    Twitch
-                </div>
-                <div class="chat" id="chat-twitch"></div>
-            </div>
-            <div class="column">
-                <div class="column-header youtube">
-                    <svg
-                        class="platform-icon"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                    >
-                        <path
-                            fill="#ff0000"
-                            d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"
-                        />
-                    </svg>
-                    YouTube
-                </div>
-                <div class="chat" id="chat-youtube"></div>
-            </div>
+        <div class="chat" id="chat-twitch"></div>
+      </div>
+      <div class="column">
+        <div class="column-header youtube">
+          <svg
+            class="platform-icon"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fill="#ff0000"
+              d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"
+            />
+          </svg>
+          YouTube
         </div>
+        <div class="chat" id="chat-youtube"></div>
+      </div>
+    </div>
 
-        <script>
-            const twitchContainer = document.getElementById("chat-twitch");
-            const youtubeContainer = document.getElementById("chat-youtube");
-            const statusIndicator = document.getElementById("status");
-            const eventsTrack = document.getElementById("events-track");
+    <script>
+      const twitchContainer = document.getElementById("chat-twitch");
+      const youtubeContainer = document.getElementById("chat-youtube");
+      const statusIndicator = document.getElementById("status");
+      const eventsTrack = document.getElementById("events-track");
 
-            const EVENTS_STORAGE_KEY = "eventsHistory";
-            const MAX_STORED_EVENTS = 10;
+      const EVENTS_STORAGE_KEY = "eventsHistory";
+      const MAX_STORED_EVENTS = 10;
 
-            function renderEventPill(
-                { source, type, name, value },
-                shouldAnimate = true,
-            ) {
-                const pill = document.createElement("div");
-                pill.className = "event-pill " + source.toLowerCase();
+      function renderEventPill(
+        { source, type, name, value },
+        shouldAnimate = true,
+      ) {
+        const pill = document.createElement("div");
+        pill.className = "event-pill " + source.toLowerCase();
 
-                if (name) {
-                    const nameSpan = document.createElement("span");
-                    nameSpan.className = "ep-name";
-                    nameSpan.textContent = name;
-                    pill.appendChild(nameSpan);
-                }
+        if (name) {
+          const nameSpan = document.createElement("span");
+          nameSpan.className = "ep-name";
+          nameSpan.textContent = name;
+          pill.appendChild(nameSpan);
+        }
 
-                const typeSpan = document.createElement("span");
-                typeSpan.className = "ep-data";
-                typeSpan.textContent = type;
-                pill.appendChild(typeSpan);
+        const typeSpan = document.createElement("span");
+        typeSpan.className = "ep-data";
+        typeSpan.textContent = type;
+        pill.appendChild(typeSpan);
 
-                if (value) {
-                    const valueSpan = document.createElement("span");
-                    valueSpan.className = "ep-data";
-                    valueSpan.textContent = value;
-                    pill.appendChild(valueSpan);
-                }
+        if (value) {
+          const valueSpan = document.createElement("span");
+          valueSpan.className = "ep-data";
+          valueSpan.textContent = value;
+          pill.appendChild(valueSpan);
+        }
 
-                eventsTrack.appendChild(pill);
+        eventsTrack.appendChild(pill);
 
-                if (!shouldAnimate) {
-                    return;
-                }
-            }
+        if (!shouldAnimate) {
+          return;
+        }
+      }
 
-            function loadEventHistory() {
-                try {
-                    const stored = JSON.parse(
-                        localStorage.getItem(EVENTS_STORAGE_KEY) || "[]",
-                    );
-                    stored
-                        .slice(0, MAX_STORED_EVENTS)
-                        .reverse()
-                        .forEach((item) => renderEventPill(item, false));
-                } catch {}
-            }
+      function loadEventHistory() {
+        try {
+          const stored = JSON.parse(
+            localStorage.getItem(EVENTS_STORAGE_KEY) || "[]",
+          );
+          stored
+            .slice(0, MAX_STORED_EVENTS)
+            .reverse()
+            .forEach((item) => renderEventPill(item, false));
+        } catch {}
+      }
 
-            function saveEventHistory(eventItem) {
-                try {
-                    const stored = JSON.parse(
-                        localStorage.getItem(EVENTS_STORAGE_KEY) || "[]",
-                    );
-                    const next = [eventItem, ...stored].slice(
-                        0,
-                        MAX_STORED_EVENTS,
-                    );
-                    localStorage.setItem(
-                        EVENTS_STORAGE_KEY,
-                        JSON.stringify(next),
-                    );
-                } catch {}
-            }
+      function saveEventHistory(eventItem) {
+        try {
+          const stored = JSON.parse(
+            localStorage.getItem(EVENTS_STORAGE_KEY) || "[]",
+          );
+          const next = [eventItem, ...stored].slice(0, MAX_STORED_EVENTS);
+          localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(next));
+        } catch {}
+      }
 
-            const TICKER_PX_PER_SEC = 100;
+      const TICKER_PX_PER_SEC = 100;
 
-            function updateTickerDuration() {
-                const w = eventsTrack.scrollWidth;
-                if (w === 0) return;
-                const dur = Math.max(5, w / TICKER_PX_PER_SEC);
-                eventsTrack.style.animationDuration = dur + "s";
-            }
+      function updateTickerDuration() {
+        const w = eventsTrack.scrollWidth;
+        if (w === 0) return;
+        const dur = Math.max(5, w / TICKER_PX_PER_SEC);
+        eventsTrack.style.animationDuration = dur + "s";
+      }
 
-            function addEventPill(source, type, name, value) {
-                const item = {source, type, name, value };
-                renderEventPill(item);
-                saveEventHistory(item);
-                updateTickerDuration();
-            }
+      function addEventPill(source, type, name, value) {
+        const item = { source, type, name, value };
+        renderEventPill(item);
+        saveEventHistory(item);
+        updateTickerDuration();
+      }
 
-            loadEventHistory();
-            updateTickerDuration();
+      loadEventHistory();
+      updateTickerDuration();
 
-            function setStatus(state, text) {
-                statusIndicator.className = "status-" + state;
-                statusIndicator.textContent = text;
-            }
+      function setStatus(state, text) {
+        statusIndicator.className = "status-" + state;
+        statusIndicator.textContent = text;
+      }
 
-            function scrollToBottom(container) {
-                container.scrollTop = container.scrollHeight;
-            }
+      function scrollToBottom(container) {
+        container.scrollTop = container.scrollHeight;
+      }
 
-            function getTime() {
-                return new Date().toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                });
-            }
+      function getTime() {
+        return new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
 
-            function renderMessage(
-                container,
-                username,
-                color,
-                messageText,
-                badges,
-                emotes,
-                mention, 
-                messageId,
-                reply
-            ) {
-                const msg = document.createElement("div");
-                msg.className = mention ? "message mention" : "message";
+      async function renderMessage(
+        container,
+        username,
+        color,
+        messageText,
+        badges,
+        emotes,
+        mention,
+        messageId,
+        reply,
+      ) {
+        const msg = document.createElement("div");
+        msg.className = mention ? "message mention" : "message";
 
-                const meta = document.createElement("div");
-                meta.className = "meta";
+        const meta = document.createElement("div");
+        meta.className = "meta";
 
-                // Badges
-                (badges || []).forEach((b) => {
-                    if (!b.imageUrl) return;
-                    const img = document.createElement("img");
-                    img.className = "badge";
-                    img.src = b.imageUrl;
-                    img.title = b.name || "";
-                    img.onerror = () => img.remove();
-                    meta.appendChild(img);
-                });
+        // Badges
+        (badges || []).forEach((b) => {
+          if (!b.imageUrl) return;
+          const img = document.createElement("img");
+          img.className = "badge";
+          img.src = b.imageUrl;
+          img.title = b.name || "";
+          img.onerror = () => img.remove();
+          meta.appendChild(img);
+        });
 
-                // Username
-                const userSpan = document.createElement("span");
-                userSpan.className = "user";
-                userSpan.style.color = color || "var(--accent)";
-                userSpan.textContent = username;
-                msg.name = username;
-                msg.id = messageId;
-                meta.appendChild(userSpan);
+        // Username
+        const userSpan = document.createElement("span");
+        userSpan.className = "user";
+        userSpan.style.color = color || "var(--accent)";
+        userSpan.textContent = username;
+        msg.dataset.name = username;
+        msg.id = messageId;
+        meta.appendChild(userSpan);
 
-                // Reply handler
-                if (reply && container === twitchContainer) {
-                    const replySpan = document.createElement("span");
-                    replySpan.className = "reply";
-                    replySpan.textContent = `Replying to ${reply.userName}'s message: "${reply.msgBody}"`;
-                    msg.appendChild(replySpan);
-                }
+        // Reply handler
+        if (reply && container === twitchContainer) {
+          const replySpan = document.createElement("span");
+          replySpan.className = "reply";
+          replySpan.textContent = `Replying to ${reply.userName}'s message: "${reply.msgBody}"`;
+          msg.appendChild(replySpan);
+        }
 
-                // Message text inline
-                const textSpan = document.createElement("span");
-                textSpan.className = "text";
-                (emotes || []).forEach(e => {
-                    messageText.replaceAll(e.name, `<img src=${e.imageUrl} class="badge"/>`)
-                })
-                textSpan.textContent = " " + messageText;
-                meta.appendChild(textSpan);
+        // Message text inline
+        const textSpan = document.createElement("span");
+        textSpan.className = "text";
+        let pText = messageText.split(" ");
+        for await (const w of pText) {
+          if (emotes && emotes[0]?.name == w) {
+            const emote = document.createElement("img");
+            emote.className = "badge";
+            emote.src = emotes[0].imageUrl;
+            textSpan.append(emote, " ");
+            emotes.shift();
+          } else {
+            textSpan.append(w, " ");
+          }
+        }
+        meta.appendChild(textSpan);
 
-                // Timestamp
-                const timeSpan = document.createElement("span");
-                timeSpan.className = "time";
-                timeSpan.textContent = getTime();
-                meta.appendChild(timeSpan);
+        // Timestamp
+        const timeSpan = document.createElement("span");
+        timeSpan.className = "time";
+        timeSpan.textContent = getTime();
+        meta.appendChild(timeSpan);
 
-                msg.appendChild(meta);
-                container.prepend(msg);
-            }
+        msg.appendChild(meta);
+        container.prepend(msg);
+      }
 
-            function purgeOnBan(e) {
-                const { data, event } = e;
-                if (!data) return;
-                const username = data.user?.name;
-                const container =
-                    source === "YouTube" ? youtubeContainer : twitchContainer;
-                let messages = container.getElementsByName(username);
-                (messages || []).forEach(m => m.remove());
-            }
+      function purgeOnBan(e) {
+        const { data, event } = e;
+        if (!data) return;
+        const username = data.targetUser.name;
+        const container = twitchContainer;
+        //source === "YouTube" ? youtubeContainer : twitchContainer;
+        let messages = container.querySelectorAll(
+          `.message[data-name="${username}"]`,
+        );
+        (messages || []).forEach((m) => m.remove());
+      }
 
-            function removeMessage(e) {
-                const { data, event } = e;
-                if (!data) return;
-                const messageId = data.messageId;
-                const container =
-                    source === "YouTube" ? youtubeContainer : twitchContainer;
-                let message = container.getElementById(messageId);
-                if (message) message.remove();
-            }
+      function removeMessage(e) {
+        const { data, event } = e;
+        if (!data) return;
+        const messageId = data.messageId;
+        const container = twitchContainer;
+        //source === "YouTube" ? youtubeContainer : twitchContainer;
+        let message = document.getElementById(messageId);
+        if (message) message.remove();
+      }
 
-            // ── Streamer.bot WebSocket Client ────────────────────────────────────────────
-            // Make sure Streamer.bot's WebSocket Server is bound to 10.0.0.195 (not 127.0.0.1)
-            // under Servers/Clients → WebSocket Server, otherwise remote connections are refused.
+      // ── Streamer.bot WebSocket Client ────────────────────────────────────────────
+      // Make sure Streamer.bot's WebSocket Server is bound to 10.0.0.195 (not 127.0.0.1)
+      // under Servers/Clients → WebSocket Server, otherwise remote connections are refused.
 
-            const client = new StreamerbotClient({
-                host: "10.0.0.195",
-                port: 8080,
-                password: "", // fill in if you set a password in Streamer.bot
-                autoReconnect: true,
-                onConnect: () => setStatus("connected", "Connected"),
-                onDisconnect: () => setStatus("disconnected", "Disconnected"),
-            });
+      const client = new StreamerbotClient({
+        host: "10.0.0.195",
+        port: 8080,
+        password: "", // fill in if you set a password in Streamer.bot
+        autoReconnect: true,
+        onConnect: () => setStatus("connected", "Connected"),
+        onDisconnect: () => setStatus("disconnected", "Disconnected"),
+      });
 
-            // ── Chat message handlers ────────────────────────────────────────────────────
+      // ── Chat message handlers ────────────────────────────────────────────────────
 
-            function colorFromName(name) {
-                let hash = 0;
-                for (let i = 0; i < name.length; i++) {
-                    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-                }
-                const h = Math.abs(hash) % 360;
-                return `hsl(${h}, 70%, 65%)`;
-            }
+      function colorFromName(name) {
+        let hash = 0;
+        for (let i = 0; i < name.length; i++) {
+          hash = name.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const h = Math.abs(hash) % 360;
+        return `hsl(${h}, 70%, 65%)`;
+      }
 
-            function handleChatMessage(e) {
-                const { data, event } = e;
-                if (!data) return;
+      function handleChatMessage(e) {
+        const { data, event } = e;
+        if (!data) return;
 
-                const source = event?.source || "Twitch";
+        const source = event?.source || "Twitch";
 
-                let displayName, color, messageText, badges, mention, messageId, emotes, reply;
+        let displayName,
+          color,
+          messageText,
+          badges,
+          mention,
+          messageId,
+          emotes,
+          reply;
 
-                if (source === "YouTube") {
-                    displayName = data.user?.name || "Unknown";
-                    color = colorFromName(displayName);
-                    messageText = data.message || "";
-                    badges = [];
-                } else {
-                    emotes = data.message.emotes;
-                    // Twitch: text lives at data.message.message, user info at data.message / data.user
-                    displayName =
-                        data.message?.displayName ||
-                        data.user?.name ||
-                        "Unknown";
-                    color =
-                        data.message?.color ||
-                        data.user?.color ||
-                        "var(--twitch)";
-                    messageText = data.message?.message || data.text || "";
-                    badges = data.message?.badges || data.user?.badges || [];
-                    mention = messageText.toLowerCase().includes("christitustech");
-                    messageId = data.messageId;
-                    reply = data.reply;
-                }
+        if (source === "YouTube") {
+          displayName = data.user?.name || "Unknown";
+          color = colorFromName(displayName);
+          messageText = data.message || "";
+          badges = [];
+        } else {
+          emotes = data.emotes;
+          // Twitch: text lives at data.message.message, user info at data.message / data.user
+          displayName =
+            data.message?.displayName || data.user?.name || "Unknown";
+          color = data.message?.color || data.user?.color || "var(--twitch)";
+          messageText = data.message?.message || data.text || "";
+          badges = data.message?.badges || data.user?.badges || [];
+          mention = messageText.toLowerCase().includes("christitustech");
+          messageId = data.messageId;
+          reply = data.reply;
+        }
 
-                const container =
-                    source === "YouTube" ? youtubeContainer : twitchContainer;
-                renderMessage(
-                    container,
-                    displayName,
-                    color,
-                    messageText,
-                    badges,
-                    emotes,
-                    mention,
-                    messageId,
-                    reply
-                );
-            }
+        const container =
+          source === "YouTube" ? youtubeContainer : twitchContainer;
+        renderMessage(
+          container,
+          displayName,
+          color,
+          messageText,
+          badges,
+          emotes,
+          mention,
+          messageId,
+          reply,
+        );
+      }
 
-            client.on("Twitch.ChatMessage", handleChatMessage);
-            client.on("YouTube.Message", handleChatMessage);
-            client.on("Twitch.UserBanned", purgeOnBan);
-            client.on("Twitch.UserTimedOut", purgeOnBan); // Even with fact that YT has timeouts, there no event for that in docs
-            client.on("Twitch.MessageDeleted", removeMessage); // YT WIP, no data about messages, so DIY
+      client.on("Twitch.ChatMessage", handleChatMessage);
+      client.on("YouTube.Message", handleChatMessage);
+      client.on("Twitch.UserBanned", purgeOnBan);
+      client.on("Twitch.UserTimedOut", purgeOnBan); // Even with fact that YT has timeouts, there no event for that in docs
+      client.on("Twitch.ChatMessageDeleted", removeMessage); // YT WIP, no data about messages, so DIY
 
-            // ── Events ticker ────────────────────────────────────────────────────────────
+      // ── Events ticker ────────────────────────────────────────────────────────────
 
-            const youtubeEventWhitelist = new Set([
-                "MembershipGift",
-                "SuperChat",
-                "SuperSticker"
-            ]);
+      const youtubeEventWhitelist = new Set([
+        "MembershipGift",
+        "SuperChat",
+        "SuperSticker",
+      ]);
 
-            function handleTwitchEvent(e) {
-                let name, value;
-                let validEvent = true;
-                const { data, event } = e;
-                if (!event) return;
-                let type = event.type;
-                switch (event.type) {
-                    case "Sub":
-                        name = data.user.name;
-                        type = data.is_prime ? "PrimeSub" : `Tier ${data.sub_tier.substring(0,1)} ${type} for ${data.durationMonths} months`;
-                        break;
-                    
-                    case "ReSub":
-                        name = data.user.name;
-                        type = data.is_prime ? "PrimeReSub" : `Tier ${data.subTier.substring(0,1)} ${type} for ${data.durationMonths} months`;
-                        value = `/ Total: ${data.cumulativeMonths} months`; 
-                        break;
+      function handleTwitchEvent(e) {
+        let name, value;
+        let validEvent = true;
+        const { data, event } = e;
+        if (!event) return;
+        let type = event.type;
+        switch (type) {
+          case "Sub":
+            name = data.user.name;
+            type = data.is_prime
+              ? "PrimeSub"
+              : `Tier ${data.sub_tier.substring(0, 1)} ${type} for ${data.durationMonths} months`;
+            break;
 
-                    // This thing is dependent on your Streamer.bot settings, I'll levae it in case you'll configure it
-                    // case "GiftBomb":
-                    //     name = data.user.name;
-                    //     type = data.total > 1 ? type : "RandomSub";
-                    //     value = data.total > 1 ? `${data.total}x Tier ${data.sub_tier.substring(0,1)}` : `${data.recipients[0]} Tier ${data.sub_tier.substring(0,1)}`
-                    //     break;
+          case "ReSub":
+            name = data.user.name;
+            type = data.is_prime
+              ? "PrimeReSub"
+              : `Tier ${data.subTier.substring(0, 1)} ${type} for ${data.durationMonths} months`;
+            value = `/ Total: ${data.cumulativeMonths} months`;
+            break;
 
-                    case "GiftSub":
-                        name = data.user.name;
-                        type = data.randomCommunitySubGift ? "RandomSub" : "GiftSub";
-                        value = `${data.durationMonths} months of Tier ${data.subTier.substring(0,1)} to ${data.recepient.name}`
-                       break;
-                    
-                    case "Raid":
-                       // There is no data for that yet, so it will just be raid from guy
-                       name = data.user.name;
-                       break;
+          // case "GiftBomb":
+          //     name = data.user.name;
+          //     type = data.total > 1 ? type : "RandomSub";
+          //     value = data.total > 1 ? `${data.total}x Tier ${data.sub_tier.substring(0,1)}` : `${data.recipients[0]} Tier ${data.sub_tier.substring(0,1)}`
+          //     break;
 
-                    case "Cheer":
-                        name = data.anonymous ? "Anonymous" : data.user.name;
-                        value = data.bits;
-                        break;                    
-                    
-                    default:
-                        validEvent = false;
-                        break;
-                }
-                if (validEvent) addEventPill("Twitch", type, name, value);
-            }
+          case "GiftSub":
+            name = data.user.name;
+            type = data.fromCommunitySubGift ? "RandomSub" : type;
+            value =
+              type == "RandomSub"
+                ? `Tier ${data.subTier.substring(0, 1)} to ${data.recipient.name}`
+                : `${data.durationMonths} months of Tier ${data.subTier.substring(0, 1)} to ${data.recipient.name}`;
+            break;
 
-            function handleYouTubeEvent(e) {
-                const { data, event } = e;
-                if (!event) return;
-                const type = event.type;
-                if (!youtubeEventWhitelist.has(type)) return;
-                const name = data?.user?.name || data?.sponsor?.name || "";
-                addEventPill("YouTube", type, name, "");
-            }
+          case "Raid":
+            // There is no data for that yet, so it will just be raid from guy
+            name = data.user.name;
+            break;
 
-            client.on("Twitch.*", handleTwitchEvent);
-            client.on("YouTube.*", handleYouTubeEvent);
-        </script>
-    </body>
+          case "Cheer":
+            name = data.anonymous ? "Anonymous" : data.user.name;
+            value = data.bits;
+            break;
+
+          default:
+            validEvent = false;
+            break;
+        }
+        if (validEvent) addEventPill("Twitch", type, name, value);
+      }
+
+      function handleYouTubeEvent(e) {
+        const { data, event } = e;
+        if (!event) return;
+        const type = event.type;
+        if (!youtubeEventWhitelist.has(type)) return;
+        const name = data?.user?.name || data?.sponsor?.name || "";
+        addEventPill("YouTube", type, name, "");
+      }
+
+      client.on("Twitch.*", handleTwitchEvent);
+      client.on("YouTube.*", handleYouTubeEvent);
+    </script>
+  </body>
 </html>
