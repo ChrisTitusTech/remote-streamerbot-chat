@@ -574,7 +574,7 @@
 
       client.on("Twitch.ChatMessage", handleChatMessage);
       client.on("YouTube.Message", handleChatMessage);
-      client.on("Twitch.UserBanned", purgeOnBan);
+      client.on("*.UserBanned", purgeOnBan);
       client.on("Twitch.UserTimedOut", purgeOnBan); // Even with fact that YT has timeouts, there no event for that in docs
       client.on("Twitch.ChatMessageDeleted", removeMessage); // YT WIP, no data about messages, so DIY
 
