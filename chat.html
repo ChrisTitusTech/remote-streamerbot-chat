@@ -409,13 +409,24 @@
 
         // Badges
         (badges || []).forEach((b) => {
-          if (!b.imageUrl) return;
-          const img = document.createElement("img");
-          img.className = "badge";
-          img.src = b.imageUrl;
-          img.title = b.name || "";
-          img.onerror = () => img.remove();
-          meta.appendChild(img);
+          if (container === twitchContainer) {
+            if (!b.imageUrl) return;
+            const img = document.createElement("img");
+            img.className = "badge";
+            img.src = b.imageUrl;
+            img.title = b.name || "";
+            img.onerror = () => img.remove();
+            meta.appendChild(img);
+          } else {
+            let badges;
+            badges += b.mod ? "🗡 " : "";
+            badges += b.sponsor ? "$ " : "";
+            badges += b.verified ? "✔ " : "";
+            const badgeSpan = document.createElement("span");
+            badgeSpan.className = "badge";
+            badgeSpan.textContent = emoji;
+            meta.appendChild(badgeSpan);
+          }
         });
 
         // Username
@@ -466,8 +477,8 @@
         const { data, event } = e;
         if (!data) return;
         const username = data.targetUser.name;
-        const container = twitchContainer;
-        //source === "YouTube" ? youtubeContainer : twitchContainer;
+        const container =
+          source === "YouTube" ? youtubeContainer : twitchContainer;
         let messages = container.querySelectorAll(
           `.message[data-name="${username}"]`,
         );
@@ -527,7 +538,12 @@
           displayName = data.user?.name || "Unknown";
           color = colorFromName(displayName);
           messageText = data.message || "";
-          badges = [];
+          emotes = data.emotes || [];
+          badges = {
+            mod: data.user?.isModerator,
+            sponsor: data.user.isSponsor,
+            verified: data.user.isVerified,
+          };
         } else {
           emotes = data.emotes;
           // Twitch: text lives at data.message.message, user info at data.message / data.user
@@ -558,7 +574,7 @@
 
       client.on("Twitch.ChatMessage", handleChatMessage);
       client.on("YouTube.Message", handleChatMessage);
-      client.on("Twitch.UserBanned", purgeOnBan);
+      client.on("*.UserBanned", purgeOnBan);
       client.on("Twitch.UserTimedOut", purgeOnBan); // Even with fact that YT has timeouts, there no event for that in docs
       client.on("Twitch.ChatMessageDeleted", removeMessage); // YT WIP, no data about messages, so DIY
 
