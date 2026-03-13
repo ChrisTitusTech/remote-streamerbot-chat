@@ -484,17 +484,20 @@
             emotes.shift();
           } else {
             const match = w.match(
-              /(https?:\/\/|www\.|(?:[a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+\.[a-zA-Z]{2,}|(?:\d{1,3}\.){3}\d{1,3}(?::\d+)?)(\/[^\s,]*)?/,
+              /(https?:\/\/[^\s,]+|www\.[^\s,]+|(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(?::\d+)?(?:\/[^\s,]*)?|(?:\d{1,3}\.){3}\d{1,3}(?::\d+)?(?:\/[^\s,]*)?)/,
             );
             if (match) {
-              const url = match[0];
+              const rawUrl = match[0];
+              const url = rawUrl.replace(/[).,!?:;]+$/, "");
+              const trailingText = rawUrl.slice(url.length);
               const link = document.createElement("a");
               link.href = url.startsWith("http") ? url : "https://" + url;
               link.textContent = url;
               link.target = "_blank";
               link.className = "link";
               textSpan.append(link);
-              const rest = w.slice(match.index + url.length);
+              if (trailingText) textSpan.append(trailingText);
+              const rest = w.slice(match.index + rawUrl.length);
               if (rest) textSpan.append(rest);
               textSpan.append(" ");
             } else {
