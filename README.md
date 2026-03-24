@@ -7,9 +7,9 @@ A lightweight live chat overlay that connects to a remote [Streamer.bot](https:/
 ## How It Works
 
 ```
-Streamer.bot (Windows PC at 10.0.0.195)
+Streamer.bot (Windows PC at 10.0.0.95)
         │
-        │  WebSocket  ws://10.0.0.195:8080
+        │  WebSocket  ws://10.0.0.95:8080
         │
 Linux machine
   └── ./chat  (bash script)
@@ -56,7 +56,7 @@ remote-streamerbot-chat/
 1. Open Streamer.bot.
 2. Go to **Servers/Clients → WebSocket Server**.
 3. Enable the WebSocket server.
-4. Set the **bind address** to your LAN IP (e.g. `10.0.0.195`) — **not** `127.0.0.1`, otherwise remote connections will be refused.
+4. Set the **bind address** to your LAN IP (e.g. `10.0.0.95`) — **not** `127.0.0.1`, otherwise remote connections will be refused.
 5. Set the port to `8080` (or update `chat.html` to match your chosen port).
 6. Make sure your Windows firewall allows inbound connections on that port.
 
@@ -79,7 +79,7 @@ Edit `chat.html` and update the host/port to match your Streamer.bot machine:
 
 ```js
 const client = new StreamerbotClient({
-    host: "10.0.0.195",  // ← your Streamer.bot machine's LAN IP
+    host: "10.0.0.95",  // ← your Streamer.bot machine's LAN IP
     port: 8080,
     password: "",         // ← fill in if you set a password in Streamer.bot
     autoReconnect: true,
@@ -187,7 +187,7 @@ Edit `chat.html` and update the `StreamerbotClient` constructor:
 
 ```js
 const client = new StreamerbotClient({
-    host: "10.0.0.195",  // LAN IP of the machine running Streamer.bot
+    host: "10.0.0.95",  // LAN IP of the machine running Streamer.bot
     port: 8080,          // WebSocket server port set in Streamer.bot
     password: "",        // Leave empty if no password is set
     autoReconnect: true,
@@ -227,7 +227,7 @@ rm -rf ~/.config/streamerbot-chat-profile
 - Confirm the WebSocket server in Streamer.bot is enabled and bound to the LAN IP (not `127.0.0.1`).
 - Test connectivity from the Linux machine:
   ```bash
-  nc -zv 10.0.0.195 8080
+  nc -zv 10.0.0.95 8080
   ```
 - Check that the Windows firewall allows inbound TCP on port 8080.
 

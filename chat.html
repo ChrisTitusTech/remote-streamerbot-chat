@@ -543,14 +543,17 @@
       }
 
       // ── Streamer.bot WebSocket Client ────────────────────────────────────────────
-      // Make sure Streamer.bot's WebSocket Server is bound to 10.0.0.195 (not 127.0.0.1)
+      // Make sure Streamer.bot's WebSocket Server is bound to 10.0.0.95 (not 127.0.0.1)
       // under Servers/Clients → WebSocket Server, otherwise remote connections are refused.
 
       const connectionParams = new URLSearchParams(window.location.search);
+      if (["10.0.0.195", "10.0.0.193"].includes(localStorage.getItem("streamerbot.host"))) {
+        localStorage.removeItem("streamerbot.host");
+      }
       const streamerbotHost =
         connectionParams.get("host") ||
         localStorage.getItem("streamerbot.host") ||
-        "10.0.0.195";
+        "10.0.0.95";
       const configuredPort = Number(
         connectionParams.get("port") ||
           localStorage.getItem("streamerbot.port") ||
