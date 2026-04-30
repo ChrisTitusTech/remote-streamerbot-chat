@@ -71,50 +71,39 @@
       #events-bar {
         background: var(--panel);
         border-bottom: 2px solid var(--border);
-        overflow: hidden;
+        overflow-x: auto;
+        overflow-y: hidden;
         flex-shrink: 0;
-        position: relative;
-        height: 32px;
-        display: flex;
-        align-items: center;
+        padding: 8px 12px;
+        scrollbar-width: none;
+      }
+
+      #events-bar::-webkit-scrollbar {
+        display: none;
       }
 
       #events-track {
         display: flex;
         align-items: center;
-        gap: 24px;
+        gap: 10px;
         white-space: nowrap;
-        animation: ticker linear infinite;
-        animation-duration: 30s;
-        padding-left: 100%;
+        min-height: 36px;
       }
 
       #events-track:empty {
-        animation: none;
-      }
-
-      #events-bar:hover #events-track {
-        animation-play-state: paused;
-      }
-
-      @keyframes ticker {
-        0% {
-          transform: translateX(0);
-        }
-        100% {
-          transform: translateX(-100%);
-        }
+        min-height: 0;
       }
 
       .event-pill {
-        display: inline-flex;
+        display: flex;
         align-items: center;
         gap: 6px;
         font-size: 12px;
-        padding: 2px 10px;
+        padding: 8px 12px;
         border-radius: 20px;
         background: var(--border);
         flex-shrink: 0;
+        border: 1px solid rgba(255, 255, 255, 0.06);
       }
 
       .event-pill.twitch {
@@ -307,7 +296,7 @@
 
       function renderEventPill(
         { source, type, name, value },
-        shouldAnimate = true,
+        prepend = false,
       ) {
         const pill = document.createElement("div");
         pill.className = "event-pill " + source.toLowerCase();
@@ -331,12 +320,20 @@
           pill.appendChild(valueSpan);
         }
 
-        eventsTrack.appendChild(pill);
-
-        if (!shouldAnimate) {
-          return;
+        if (prepend) {
+          eventsTrack.prepend(pill);
+        } else {
+          eventsTrack.appendChild(pill);
         }
+
+        while (eventsTrack.children.length > MAX_STORED_EVENTS) {
+          eventsTrack.lastElementChild?.remove();
+        }
+
+        eventsBar.scrollLeft = 0;
       }
+
+      const eventsBar = document.getElementById("events-bar");
 
       function loadEventHistory() {
         try {
@@ -345,8 +342,7 @@
           );
           stored
             .slice(0, MAX_STORED_EVENTS)
-            .reverse()
-            .forEach((item) => renderEventPill(item, false));
+            .forEach((item) => renderEventPill(item));
         } catch {}
       }
 
@@ -360,24 +356,13 @@
         } catch {}
       }
 
-      const TICKER_PX_PER_SEC = 100;
-
-      function updateTickerDuration() {
-        const w = eventsTrack.scrollWidth;
-        if (w === 0) return;
-        const dur = Math.max(5, w / TICKER_PX_PER_SEC);
-        eventsTrack.style.animationDuration = dur + "s";
-      }
-
       function addEventPill(source, type, name, value) {
         const item = { source, type, name, value };
-        renderEventPill(item);
+        renderEventPill(item, true);
         saveEventHistory(item);
-        updateTickerDuration();
       }
 
       loadEventHistory();
-      updateTickerDuration();
 
       function setStatus(state, text) {
         statusIndicator.className = "status-" + state;
@@ -658,7 +643,10 @@
       // ── Events ticker ────────────────────────────────────────────────────────────
 
       const youtubeEventWhitelist = new Set([
+        "NewSponsor",
+        "MemberMileStone",
         "MembershipGift",
+        "GiftMembershipReceived",
         "SuperChat",
         "SuperSticker",
       ]);
@@ -722,8 +710,24 @@
         if (!event) return;
         const type = event.type;
         if (!youtubeEventWhitelist.has(type)) return;
-        const name = data?.user?.name || data?.sponsor?.name || "";
-        addEventPill("YouTube", type, name, "");
+
+        const name =
+          data?.user?.name ||
+          data?.sponsor?.name ||
+          data?.recipient?.name ||
+          data?.gifter?.name ||
+          "";
+
+        let value = "";
+        if (type === "MembershipGift") {
+          const amount = data?.count || data?.giftCount;
+          value = amount ? `${amount} gifted` : "";
+        } else if (type === "MemberMileStone") {
+          const months = data?.months || data?.memberMonth;
+          value = months ? `${months} months` : "";
+        }
+
+        addEventPill("YouTube", type, name, value);
       }
 
       client.on("Twitch.*", handleTwitchEvent);

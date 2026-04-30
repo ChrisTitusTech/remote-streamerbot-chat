@@ -1,27 +1,78 @@
 #!/usr/bin/env bash
 
-CHAT_FILE="$HOME/github/remote-streamerbot-chat/chat.html"
+set -euo pipefail
+
+CHAT_DIR="$HOME/github/remote-streamerbot-chat"
+CHAT_FILE="$CHAT_DIR/chat.html"
 PROFILE_DIR="$HOME/.config/streamerbot-chat-profile"
+SERVER_HOST="127.0.0.1"
+SERVER_PORT="${STREAMERBOT_CHAT_PORT:-8765}"
+BROWSER_CMD="${STREAMERBOT_CHAT_BROWSER:-brave-origin-nightly}"
+SERVER_PID=""
+
+cleanup() {
+  if [[ -n "$SERVER_PID" ]] && kill -0 "$SERVER_PID" 2>/dev/null; then
+    kill "$SERVER_PID" 2>/dev/null || true
+    wait "$SERVER_PID" 2>/dev/null || true
+  fi
+}
+
+trap cleanup EXIT INT TERM
 
 # Ensure file exists
 if [[ ! -f "$CHAT_FILE" ]]; then
-    echo "Error: $CHAT_FILE not found."
-    exit 1
+  echo "Error: $CHAT_FILE not found."
+  exit 1
+fi
+
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "Error: python3 is required to serve chat.html over localhost."
+  exit 1
+fi
+
+if ! command -v "$BROWSER_CMD" >/dev/null 2>&1; then
+  echo "Error: browser command '$BROWSER_CMD' was not found."
+  exit 1
 fi
 
 # Remove only the SingletonLock so Chromium doesn't hand off to a dead session
 rm -f "$PROFILE_DIR/SingletonLock" "$PROFILE_DIR/SingletonCookie" "$PROFILE_DIR/SingletonSocket"
 
-# Launch Helium directly from the local file — no HTTP server needed.
-# file:// avoids all localhost/IPv4/IPv6 networking issues entirely.
-helium-browser \
+python3 -m http.server "$SERVER_PORT" \
+  --bind "$SERVER_HOST" \
+  --directory "$CHAT_DIR" \
+  >/dev/null 2>&1 &
+SERVER_PID=$!
+
+python3 - <<PY
+import socket
+import sys
+import time
+
+host = ${SERVER_HOST@Q}
+port = int(${SERVER_PORT@Q})
+
+for _ in range(50):
+  try:
+    with socket.create_connection((host, port), timeout=0.2):
+      sys.exit(0)
+  except OSError:
+    time.sleep(0.1)
+
+sys.exit(1)
+PY
+
+if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+  echo "Error: failed to start local server on ${SERVER_HOST}:${SERVER_PORT}."
+  exit 1
+fi
+
+"$BROWSER_CMD" \
   --user-data-dir="$PROFILE_DIR" \
   --disable-gpu \
   --ozone-platform=x11 \
   --no-first-run \
   --no-default-browser-check \
   --disable-extensions \
-  --allow-file-access-from-files \
-  --disable-web-security \
   --class="StreamerBotChat" \
-  "file://${CHAT_FILE}"
+  "http://${SERVER_HOST}:${SERVER_PORT}/chat.html"
