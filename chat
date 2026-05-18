@@ -4,24 +4,49 @@ set -euo pipefail
 
 CHAT_DIR="$HOME/github/remote-streamerbot-chat"
 CHAT_FILE="$CHAT_DIR/chat.html"
+SERVER_FILE="$CHAT_DIR/chat-server.py"
 PROFILE_DIR="$HOME/.config/streamerbot-chat-profile"
 SERVER_HOST="127.0.0.1"
 SERVER_PORT="${STREAMERBOT_CHAT_PORT:-8765}"
 BROWSER_CMD="${STREAMERBOT_CHAT_BROWSER:-brave-origin-nightly}"
-SERVER_PID=""
+RUNTIME_DIR="$HOME/.cache/streamerbot-chat"
+SERVER_PID_FILE="$RUNTIME_DIR/server.pid"
 
-cleanup() {
-  if [[ -n "$SERVER_PID" ]] && kill -0 "$SERVER_PID" 2>/dev/null; then
-    kill "$SERVER_PID" 2>/dev/null || true
-    wait "$SERVER_PID" 2>/dev/null || true
+ensure_server_running() {
+  mkdir -p "$RUNTIME_DIR"
+
+  if [[ -f "$SERVER_PID_FILE" ]]; then
+    local existing_pid
+    existing_pid="$(cat "$SERVER_PID_FILE" 2>/dev/null || true)"
+    if [[ -n "$existing_pid" ]] && kill -0 "$existing_pid" 2>/dev/null; then
+      return
+    fi
+    rm -f "$SERVER_PID_FILE"
+  fi
+
+  python3 "$SERVER_FILE" \
+    --host "$SERVER_HOST" \
+    --port "$SERVER_PORT" \
+    --directory "$CHAT_DIR" \
+    >/dev/null 2>&1 &
+
+  local new_pid=$!
+  echo "$new_pid" > "$SERVER_PID_FILE"
+
+  if ! kill -0 "$new_pid" 2>/dev/null; then
+    echo "Error: failed to start local server on ${SERVER_HOST}:${SERVER_PORT}."
+    exit 1
   fi
 }
-
-trap cleanup EXIT INT TERM
 
 # Ensure file exists
 if [[ ! -f "$CHAT_FILE" ]]; then
   echo "Error: $CHAT_FILE not found."
+  exit 1
+fi
+
+if [[ ! -f "$SERVER_FILE" ]]; then
+  echo "Error: $SERVER_FILE not found."
   exit 1
 fi
 
@@ -38,11 +63,7 @@ fi
 # Remove only the SingletonLock so Chromium doesn't hand off to a dead session
 rm -f "$PROFILE_DIR/SingletonLock" "$PROFILE_DIR/SingletonCookie" "$PROFILE_DIR/SingletonSocket"
 
-python3 -m http.server "$SERVER_PORT" \
-  --bind "$SERVER_HOST" \
-  --directory "$CHAT_DIR" \
-  >/dev/null 2>&1 &
-SERVER_PID=$!
+ensure_server_running
 
 python3 - <<PY
 import socket
@@ -61,11 +82,6 @@ for _ in range(50):
 
 sys.exit(1)
 PY
-
-if ! kill -0 "$SERVER_PID" 2>/dev/null; then
-  echo "Error: failed to start local server on ${SERVER_HOST}:${SERVER_PORT}."
-  exit 1
-fi
 
 "$BROWSER_CMD" \
   --user-data-dir="$PROFILE_DIR" \

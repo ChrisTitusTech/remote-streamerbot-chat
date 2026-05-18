@@ -52,6 +52,52 @@
         flex-shrink: 0;
       }
 
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      #notify-bridge-status {
+        font-size: 11px;
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        background: #1a1f2b;
+      }
+
+      #notify-bridge-status.ok {
+        color: #b8f5bf;
+        border-color: rgba(76, 175, 80, 0.45);
+      }
+
+      #notify-bridge-status.error {
+        color: #ffd1d1;
+        border-color: rgba(244, 67, 54, 0.55);
+      }
+
+      #test-popup-btn {
+        border: 1px solid var(--border);
+        background: #202635;
+        color: var(--text);
+        border-radius: 8px;
+        padding: 5px 10px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      #test-popup-btn:hover {
+        background: #283149;
+      }
+
       #status {
         font-size: 12px;
         padding: 4px 10px;
@@ -71,11 +117,23 @@
       #events-bar {
         background: var(--panel);
         border-bottom: 2px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 10px;
         overflow-x: auto;
         overflow-y: hidden;
         flex-shrink: 0;
         padding: 8px 12px;
         scrollbar-width: none;
+      }
+
+      #events-label {
+        font-size: 11px;
+        color: var(--muted);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        font-weight: 700;
+        flex-shrink: 0;
       }
 
       #events-bar::-webkit-scrollbar {
@@ -87,11 +145,8 @@
         align-items: center;
         gap: 10px;
         white-space: nowrap;
-        min-height: 36px;
-      }
-
-      #events-track:empty {
-        min-height: 0;
+        min-height: 34px;
+        flex: 1;
       }
 
       .event-pill {
@@ -111,6 +166,14 @@
       }
       .event-pill.youtube {
         border-left: 3px solid var(--youtube);
+      }
+
+      .event-pill.kick {
+        border-left: 3px solid #53fc18;
+      }
+
+      .event-pill.patreon {
+        border-left: 3px solid #ff5f5f;
       }
 
       .event-pill .ep-name {
@@ -227,6 +290,100 @@
         flex-shrink: 0;
       }
 
+      #popup-host {
+        flex-shrink: 0;
+      }
+
+      #popup-host:not(:empty) {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .alert-popup {
+        background: linear-gradient(160deg, #1e2533, #141924);
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--accent);
+        border-radius: 12px;
+        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+        padding: 10px 12px;
+        animation: popupIn 0.2s ease-out;
+        width: min(720px, 100%);
+        margin: 0 auto;
+      }
+
+      .alert-popup.twitch {
+        border-left-color: var(--twitch);
+      }
+
+      .alert-popup.youtube {
+        border-left-color: var(--youtube);
+      }
+
+      .alert-popup.kick {
+        border-left-color: #53fc18;
+      }
+
+      .alert-popup.patreon {
+        border-left-color: #ff5f5f;
+      }
+
+      .alert-popup.fade-out {
+        animation: popupOut 0.2s ease-in forwards;
+      }
+
+      .popup-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 6px;
+      }
+
+      .popup-title {
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .popup-source {
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .popup-main {
+        font-size: 14px;
+        line-height: 1.35;
+      }
+
+      .popup-main .name {
+        font-weight: 700;
+      }
+
+      .popup-main .value {
+        color: var(--muted);
+      }
+
+      @keyframes popupIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @keyframes popupOut {
+        from {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+        to {
+          opacity: 0;
+          transform: translateY(10px) scale(0.98);
+        }
+      }
+
       @keyframes fadeIn {
         from {
           opacity: 0;
@@ -242,13 +399,20 @@
 
   <body>
     <header>
-      Live Chat
-      <div id="status" class="status-connecting">Connecting…</div>
+      <div class="header-left">Live Chat</div>
+      <div class="header-right">
+        <button id="test-popup-btn" type="button">Test Popup</button>
+        <div id="notify-bridge-status">Notify bridge: unknown</div>
+        <div id="status" class="status-connecting">Connecting…</div>
+      </div>
     </header>
 
     <div id="events-bar">
+      <div id="events-label">Events</div>
       <div id="events-track"></div>
     </div>
+
+    <div id="popup-host" aria-live="polite"></div>
 
     <div id="columns">
       <div class="column">
@@ -290,9 +454,144 @@
       const youtubeContainer = document.getElementById("chat-youtube");
       const statusIndicator = document.getElementById("status");
       const eventsTrack = document.getElementById("events-track");
+      const popupHost = document.getElementById("popup-host");
+      const testPopupButton = document.getElementById("test-popup-btn");
+      const notifyBridgeStatus = document.getElementById("notify-bridge-status");
 
       const EVENTS_STORAGE_KEY = "eventsHistory";
       const MAX_STORED_EVENTS = 10;
+      const POPUP_VISIBLE_MS = 8000;
+
+      const popupQueue = [];
+      let popupActive = false;
+
+      function setNotifyBridgeStatus(state, message) {
+        if (!notifyBridgeStatus) return;
+        notifyBridgeStatus.classList.remove("ok", "error");
+        if (state) notifyBridgeStatus.classList.add(state);
+        notifyBridgeStatus.textContent = `Notify bridge: ${message}`;
+      }
+
+      function sanitizeText(value) {
+        if (value == null) return "";
+        return String(value).trim();
+      }
+
+      function maybeShowNotification(source, type, name, value) {
+        if (!document.hidden) return;
+        if (!("Notification" in window)) return;
+        if (Notification.permission !== "granted") return;
+
+        const title = `${source} ${type}`;
+        const bodyParts = [sanitizeText(name), sanitizeText(value)].filter(
+          Boolean,
+        );
+
+        try {
+          new Notification(title, {
+            body: bodyParts.join(" • "),
+            silent: true,
+          });
+        } catch {}
+      }
+
+      function pushDunstNotification(source, type, name, value) {
+        const title = sanitizeText(`${source} ${type}`) || "StreamerBot Alert";
+        const body = [sanitizeText(name), sanitizeText(value)]
+          .filter(Boolean)
+          .join(" • ");
+
+        return fetch("/notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, body, urgency: "normal" }),
+          keepalive: true,
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}`);
+            }
+            setNotifyBridgeStatus("ok", "online");
+          })
+          .catch(() => {
+            setNotifyBridgeStatus("error", "offline");
+          });
+      }
+
+      function renderPopup(item) {
+        const popup = document.createElement("div");
+        popup.className = `alert-popup ${item.source.toLowerCase()}`;
+
+        const top = document.createElement("div");
+        top.className = "popup-top";
+
+        const title = document.createElement("div");
+        title.className = "popup-title";
+        title.textContent = item.type;
+
+        const source = document.createElement("div");
+        source.className = "popup-source";
+        source.textContent = item.source;
+
+        top.append(title, source);
+
+        const main = document.createElement("div");
+        main.className = "popup-main";
+
+        const nameText = sanitizeText(item.name);
+        const valueText = sanitizeText(item.value);
+
+        if (nameText) {
+          const nameSpan = document.createElement("span");
+          nameSpan.className = "name";
+          nameSpan.textContent = nameText;
+          main.appendChild(nameSpan);
+        }
+
+        if (valueText) {
+          if (nameText) {
+            main.append(" ");
+          }
+          const valueSpan = document.createElement("span");
+          valueSpan.className = "value";
+          valueSpan.textContent = valueText;
+          main.appendChild(valueSpan);
+        }
+
+        popup.append(top, main);
+        popupHost.replaceChildren(popup);
+
+        setTimeout(() => {
+          popup.classList.add("fade-out");
+          setTimeout(() => {
+            popup.remove();
+            popupActive = false;
+            processPopupQueue();
+          }, 220);
+        }, POPUP_VISIBLE_MS);
+      }
+
+      function processPopupQueue() {
+        if (popupActive) return;
+        const next = popupQueue.shift();
+        if (!next) return;
+        popupActive = true;
+        renderPopup(next);
+      }
+
+      function enqueuePopup(source, type, name, value = "") {
+        const item = {
+          source: sanitizeText(source) || "Alert",
+          type: sanitizeText(type) || "Event",
+          name: sanitizeText(name),
+          value: sanitizeText(value),
+        };
+
+        popupQueue.push(item);
+        pushDunstNotification(item.source, item.type, item.name, item.value);
+        maybeShowNotification(item.source, item.type, item.name, item.value);
+        processPopupQueue();
+      }
 
       function renderEventPill(
         { source, type, name, value },
@@ -362,7 +661,54 @@
         saveEventHistory(item);
       }
 
+      function triggerTestPopup() {
+        const samples = [
+          {
+            source: "Twitch",
+            type: "TestSub",
+            name: "TestViewer",
+            value: "Tier 1 for 3 months",
+          },
+          {
+            source: "YouTube",
+            type: "TestSuperChat",
+            name: "TestMember",
+            value: "$10.00",
+          },
+          {
+            source: "Kick",
+            type: "TestGift",
+            name: "KickTester",
+            value: "5 gifted",
+          },
+          {
+            source: "Patreon",
+            type: "TestPledge",
+            name: "PatronTest",
+            value: "$7 / month",
+          },
+        ];
+
+        const sample = samples[Math.floor(Math.random() * samples.length)];
+        addEventPill(sample.source, sample.type, sample.name, sample.value);
+        enqueuePopup(sample.source, sample.type, sample.name, sample.value);
+      }
+
+      testPopupButton?.addEventListener("click", triggerTestPopup);
+
       loadEventHistory();
+      setNotifyBridgeStatus(null, "checking...");
+      pushDunstNotification("System", "Startup", "Chat overlay", "bridge test");
+
+      if ("Notification" in window && Notification.permission === "default") {
+        document.addEventListener(
+          "click",
+          () => {
+            Notification.requestPermission().catch(() => {});
+          },
+          { once: true },
+        );
+      }
 
       function setStatus(state, text) {
         statusIndicator.className = "status-" + state;
@@ -691,6 +1037,7 @@
           case "Raid":
             // There is no data for that yet, so it will just be raid from guy
             name = data.user.name;
+            value = data.viewers ? `with ${data.viewers} viewers` : "";
             break;
 
           case "Cheer":
@@ -698,11 +1045,28 @@
             value = data.bits;
             break;
 
+          case "WatchStreak":
+            name = data.displayName || data.userName || data.user?.name;
+            value = data.watchStreak ? `${data.watchStreak} stream streak` : "";
+            break;
+
+          case "RewardRedemption":
+            name = data.user?.name || data.userName || data.user_name;
+            value =
+              data.reward?.title ||
+              data.rewardName ||
+              data.reward?.name ||
+              "redeemed channel points";
+            break;
+
           default:
             validEvent = false;
             break;
         }
-        if (validEvent) addEventPill("Twitch", type, name, value);
+        if (validEvent) {
+          addEventPill("Twitch", type, name, value);
+          enqueuePopup("Twitch", type, name, value);
+        }
       }
 
       function handleYouTubeEvent(e) {
@@ -728,10 +1092,58 @@
         }
 
         addEventPill("YouTube", type, name, value);
+        enqueuePopup("YouTube", type, name, value || data?.message || "");
+      }
+
+      const kickEventWhitelist = new Set([
+        "Follow",
+        "Subscription",
+        "Resubscription",
+        "GiftSubscription",
+        "MassGiftSubscription",
+        "StreamOnline",
+        "StreamOffline",
+      ]);
+
+      function handleKickEvent(e) {
+        const { data, event } = e;
+        if (!event) return;
+        const type = event.type;
+        if (!kickEventWhitelist.has(type)) return;
+
+        const name =
+          data?.user?.name ||
+          data?.displayName ||
+          data?.username ||
+          data?.fromUser?.name ||
+          "Kick";
+
+        const value =
+          data?.months != null
+            ? `${data.months} months`
+            : data?.giftCount != null
+              ? `${data.giftCount} gifted`
+              : data?.message || "";
+
+        addEventPill("Kick", type, name, value);
+        enqueuePopup("Kick", type, name, value);
+      }
+
+      function handlePatreonPledge(e) {
+        const data = e?.data;
+        const name =
+          data?.user?.name || data?.fullName || data?.displayName || "Patron";
+        const value =
+          data?.amountFormatted || data?.amount || data?.title || "new pledge";
+
+        addEventPill("Patreon", "PledgeCreated", name, value);
+        enqueuePopup("Patreon", "PledgeCreated", name, value);
       }
 
       client.on("Twitch.*", handleTwitchEvent);
       client.on("YouTube.*", handleYouTubeEvent);
+      client.on("Kick.*", handleKickEvent);
+      client.on("Patreon.PledgeCreated", handlePatreonPledge);
     </script>
   </body>
 </html>

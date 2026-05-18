@@ -224,6 +224,38 @@ You can then launch **StreamerBot Chat** from your application launcher like any
 
 ---
 
+## Run Server On Login (systemd --user)
+
+If you want the local chat server to always be available (including the `/notify` endpoint for dunst), install the user service:
+
+```bash
+cd ~/github/remote-streamerbot-chat
+./install-user-service.sh
+```
+
+Then open the page directly in any browser:
+
+```text
+http://127.0.0.1:8765/chat.html
+```
+
+Useful commands:
+
+```bash
+systemctl --user status streamerbot-chat-server.service
+systemctl --user restart streamerbot-chat-server.service
+systemctl --user stop streamerbot-chat-server.service
+systemctl --user disable streamerbot-chat-server.service
+```
+
+To start user services even when not logged in, enable lingering:
+
+```bash
+loginctl enable-linger "$USER"
+```
+
+---
+
 ## Troubleshooting
 
 **Grey/blank window on launch**

@@ -1,0 +1,15 @@
+[Unit]
+Description=StreamerBot Chat Local HTTP Server
+After=graphical-session.target
+Wants=graphical-session.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/github/remote-streamerbot-chat
+ExecStart=/usr/bin/env python3 %h/github/remote-streamerbot-chat/chat-server.py --host 127.0.0.1 --port 8765 --directory %h/github/remote-streamerbot-chat
+Restart=on-failure
+RestartSec=2
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=default.target
